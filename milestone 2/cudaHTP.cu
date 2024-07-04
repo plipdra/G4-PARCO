@@ -55,7 +55,7 @@ void houghTransformCUDA(unsigned char* image, int width, int height, int** accum
 void saveAccumulatorAsPGM(int* accumulator, int max_rho, int num_thetas, const char* filename);
 
 int main() {
-    printf("Start\n");
+    printf("Creating a diagonal line with dimensions 32x32....\n");
     int width = 32;
     int height = 32;
 
@@ -98,9 +98,15 @@ int main() {
     int max_rho;
     int num_thetas;
 
+    printf("Performing CUDA Hough Transform....\n");
     houghTransformCUDA(image, width, height, &accumulator, &max_rho, &num_thetas);
 
+    printf("Done!\n");
+
+    printf("Saving Accumulator as PGM....\n");
     saveAccumulatorAsPGM(accumulator, max_rho, num_thetas, "accumulator1024_cuda.pgm");
+
+    printf("Saved! Please run IrfanView to see the waveform.\n");
 
     free(accumulator);
     return 0;

@@ -11,8 +11,8 @@ void houghTransform(unsigned char* image, int width, int height, int** accumulat
 void saveAccumulatorAsPGM(int* accumulator, int max_rho, int num_thetas, const char* filename);
 
 int main() {
-    printf("Start\n");
-    // Example image dimensions (replace with actual values)
+    printf("Creating a diagonal line with dimensions 32x32....\n");
+
     int width64 = 8;
     int height64 = 8;
 
@@ -22,7 +22,6 @@ int main() {
     int width = 32;
     int height = 32;
 
-    // Example edge-detected image (replace with actual edge-detected image)
     unsigned char image64[64] = {
         1, 0, 0, 0, 0, 0, 0, 0,
         0, 1, 0, 0, 0, 0, 0, 0,
@@ -88,16 +87,19 @@ int main() {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
     };
 
-    // Hough Transform variables
     int* accumulator;
     int max_rho;
     int num_thetas;
 
-    // Perform Hough Transform
+    printf("Performing C Hough Transform....\n");
     houghTransform(image, width, height, &accumulator, &max_rho, &num_thetas);
 
-    // Save the accumulator array as an image
+    printf("Done!\n");
+
+    printf("Saving Accumulator as PGM....\n");
     saveAccumulatorAsPGM(accumulator, max_rho, num_thetas, "accumulator1024.pgm");
+
+    printf("Saved! Please run IrfanView to see the waveform.\n");
 
     free(accumulator);
     return 0;
