@@ -8,6 +8,7 @@
 
 void houghTransform(unsigned char* image, int width, int height, int** accumulator, int* max_rho, int* num_thetas);
 void saveAccumulatorAsPGM(int* accumulator, int max_rho, int num_thetas, const char* filename);
+void saveAccumulatorAsText(int* accumulator, int max_rho, int num_thetas, const char* filename);
 
 int main() {
     printf("Creating a diagonal line with dimensions 32x32....\n");
@@ -97,11 +98,31 @@ int main() {
 
     printf("Saving Accumulator as PGM....\n");
     saveAccumulatorAsPGM(accumulator, max_rho, num_thetas, "accumulator1024.pgm");
+    saveAccumulatorAsText(accumulator, max_rho, num_thetas, "accumulator.txt");
 
     printf("Saved! Please run IrfanView to see the waveform.\n");
 
     free(accumulator);
     return 0;
+}
+
+void saveAccumulatorAsText(int* accumulator, int max_rho, int num_thetas, const char* filename) {
+    int total_rho = 2 * max_rho;
+
+    FILE* file = fopen(filename, "w");
+    if (!file) {
+        fprintf(stderr, "Failed to open file for writing\n");
+        return;
+    }
+
+    for (int rho = 0; rho < total_rho; rho++) {
+        for (int theta = 0; theta < num_thetas; theta++) {
+            fprintf(file, "%d ", accumulator[rho * num_thetas + theta]);
+        }
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
 }
 
 void houghTransform(unsigned char* image, int width, int height, int** accumulator, int* max_rho, int* num_thetas) {
