@@ -6,7 +6,6 @@
 #define PI 3.14159265
 #define MAX_THETA 180
 
-// Function prototypes
 void houghTransform(unsigned char* image, int width, int height, int** accumulator, int* max_rho, int* num_thetas);
 void saveAccumulatorAsPGM(int* accumulator, int max_rho, int num_thetas, const char* filename);
 
