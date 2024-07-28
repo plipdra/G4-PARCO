@@ -63,6 +63,7 @@ void houghTransformCUDA(unsigned char* image, int width, int height, int** accum
     cudaFree(d_image);
     cudaFree(d_accumulator);
 }
+
 void houghTransform(unsigned char* image, int width, int height, int** accumulator, int* max_rho, int* num_thetas) {
     int x, y, theta;
     int rho;
