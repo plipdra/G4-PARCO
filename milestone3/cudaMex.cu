@@ -39,11 +39,13 @@ void houghTransformCUDA(unsigned char* image, int width, int height, int** accum
 
     *accumulator = (int*)calloc((*num_thetas) * (2 * (*max_rho) + 1), sizeof(int));
 
-    cudaMalloc((void**)&d_image, image_size);
-    cudaMalloc((void**)&d_accumulator, accumulator_size);
+    cudaMallocManaged((void**)&d_image, image_size);
+    cudaMallocManaged((void**)&d_accumulator, accumulator_size);
 
-    cudaMemcpy(d_image, image, image_size, cudaMemcpyHostToDevice);
-    cudaMemset(d_accumulator, 0, accumulator_size);
+    memcpy(d_image, image, image_size);
+
+    cudaMemPrefetchAsync(d_image, image_size, device);
+    cudaMemPrefetchAsync(d_accumulator, accumulator_size, device);
 
     dim3 blockSize(16, 16);
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y);
@@ -51,7 +53,9 @@ void houghTransformCUDA(unsigned char* image, int width, int height, int** accum
 
     cudaDeviceSynchronize();
 
-    cudaMemcpy(*accumulator, d_accumulator, accumulator_size, cudaMemcpyDeviceToHost);
+    cudaMemPrefetchAsync(d_accumulator, accumulator_size, cudaCpuDeviceId);
+
+    memcpy(*accumulator, d_accumulator, accumulator_size);
 
     cudaFree(d_image);
     cudaFree(d_accumulator);
