@@ -66,7 +66,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         mexErrMsgIdAndTxt("CUDAHoughTransform:InvalidOutput", "One output required.");
     }
 
-    // Get the input image (assume it's a 1D array of type uint8)
     if (!mxIsUint8(prhs[0])) {
         mexErrMsgIdAndTxt("CUDAHoughTransform:InvalidInputType", "Input must be a uint8 array.");
     }
@@ -75,22 +74,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int width = (int)mxGetScalar(prhs[1]);
     int height = (int)mxGetScalar(prhs[2]);
 
-    // Define the output variables
     int max_rho;
     int num_thetas;
     int *accumulator;
 
-    // Call the CUDA function
     houghTransformCUDA(image, width, height, &accumulator, &max_rho, &num_thetas);
 
-    // Create the output array in MATLAB
     mwSize dims[2] = { num_thetas, 2 * max_rho + 1 };
     plhs[0] = mxCreateNumericArray(2, dims, mxINT32_CLASS, mxREAL);
     int *output = (int *)mxGetData(plhs[0]);
 
-    // Copy the accumulator to the output
     memcpy(output, accumulator, num_thetas * (2 * max_rho + 1) * sizeof(int));
 
-    // Free the host memory allocated in the CUDA function
     free(accumulator);
 }
