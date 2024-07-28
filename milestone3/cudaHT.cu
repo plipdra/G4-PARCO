@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <windows.h>
 #include <math.h>
 #include <cuda_runtime.h>
 
@@ -61,7 +63,32 @@ void houghTransformCUDA(unsigned char* image, int width, int height, int** accum
     cudaFree(d_image);
     cudaFree(d_accumulator);
 }
+void houghTransform(unsigned char* image, int width, int height, int** accumulator, int* max_rho, int* num_thetas) {
+    int x, y, theta;
+    int rho;
+    float theta_rad;
 
+    *max_rho = (int)(sqrt(width * width + height * height));
+    *num_thetas = MAX_THETA;
+
+    *accumulator = (int*)calloc((*num_thetas) * (2 * (*max_rho) + 1), sizeof(int));
+
+    for (y = 0; y < height; ++y) {
+        for (x = 0; x < width; ++x) {
+            if (image[y * width + x] > 0) {
+                for (theta = 0; theta < *num_thetas; ++theta) {
+                    theta_rad = (theta * PI) / 180.0;
+                    rho = (int)(x * cos(theta_rad) + y * sin(theta_rad));
+                    int rho_index = rho + *max_rho;  // Shift rho index to positive
+
+                    if (rho_index >= 0 && rho_index < 2 * (*max_rho) + 1) {
+                        (*accumulator)[theta * (2 * (*max_rho) + 1) + rho_index]++;
+                    }
+                }
+            }
+        }
+    }
+}
 void saveAccumulatorAsPGM(int* accumulator, int max_rho, int num_thetas, const char* filename);
 
 int main() {
@@ -107,12 +134,32 @@ int main() {
     int* accumulator;
     int max_rho;
     int num_thetas;
+    _LARGE_INTEGER freq,start, end;
+    double timeTaken, timeTakenC, avgT, avgTC;
+    int n = 50;
+    timeTaken = 0;
+    timeTakenC = 0;
+    QueryPerformanceFrequency(&freq);
+    printf("Performing C Hough Transform....\n");
+    for(int i = 0; i<n; i++){
+        QueryPerformanceCounter(&start);
+        houghTransform(image, width, height, &accumulator, &max_rho, &num_thetas);
+        QueryPerformanceCounter(&end);
+        timeTakenC += (double)(end.QuadPart - start.QuadPart) * 1000 / freq.QuadPart;
+    }
 
+    avgTC = timeTakenC/n;
     printf("Performing CUDA Hough Transform....\n");
-    houghTransformCUDA(image, width, height, &accumulator, &max_rho, &num_thetas);
+    for(int i = 0; i< n; i++){
+        QueryPerformanceCounter(&start);
+        houghTransformCUDA(image, width, height, &accumulator, &max_rho, &num_thetas);
+        QueryPerformanceCounter(&end);
+        timeTaken += (double)(end.QuadPart - start.QuadPart) * 1000 / freq.QuadPart;
+    }
 
-    printf("Done!\n");
+    avgT = timeTaken/n;
 
+    printf("Done!\n\nAverage Time Taken to perform Hough Transform with C after %d runs: %fms\nAverage Time Taken to perform Hough Transform with CUDA after %d runs: %fms\n", n,avgTC, n,avgT);
     printf("Saving Accumulator as PGM....\n");
     saveAccumulatorAsPGM(accumulator, max_rho, num_thetas, "accumulator1024_cuda.pgm");
 
