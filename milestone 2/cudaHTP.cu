@@ -28,6 +28,9 @@ __global__ void houghTransformKernel(unsigned char* d_image, int width, int heig
 void houghTransformCUDA(unsigned char* image, int width, int height, int** accumulator, int* max_rho, int* num_thetas) {
     int* d_accumulator;
     unsigned char* d_image;
+    int device = 0;
+
+    cudaGetDevice(&device);
 
     *max_rho = (int)(sqrt(width * width + height * height));
     *num_thetas = MAX_THETA;
@@ -37,16 +40,23 @@ void houghTransformCUDA(unsigned char* image, int width, int height, int** accum
 
     *accumulator = (int*)calloc((*num_thetas) * (2 * (*max_rho) + 1), sizeof(int));
 
-    cudaMalloc((void**)&d_image, image_size);
-    cudaMalloc((void**)&d_accumulator, accumulator_size);
-    cudaMemcpy(d_image, image, image_size, cudaMemcpyHostToDevice);
-    cudaMemset(d_accumulator, 0, accumulator_size);
+    cudaMallocManaged((void**)&d_image, image_size);
+    cudaMallocManaged((void**)&d_accumulator, accumulator_size);
+
+    memcpy(d_image, image, image_size);
+
+    cudaMemPrefetchAsync(d_image, image_size, device);
+    cudaMemPrefetchAsync(d_accumulator, accumulator_size, device);
 
     dim3 blockSize(16, 16);
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y);
     houghTransformKernel<<<gridSize, blockSize>>>(d_image, width, height, d_accumulator, *max_rho, *num_thetas);
 
-    cudaMemcpy(*accumulator, d_accumulator, accumulator_size, cudaMemcpyDeviceToHost);
+    cudaDeviceSynchronize();
+
+    cudaMemPrefetchAsync(d_accumulator, accumulator_size, cudaCpuDeviceId);
+
+    memcpy(*accumulator, d_accumulator, accumulator_size);
 
     cudaFree(d_image);
     cudaFree(d_accumulator);
