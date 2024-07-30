@@ -148,6 +148,8 @@ int main() {
         QueryPerformanceCounter(&end);
         timeTakenC += (double)(end.QuadPart - start.QuadPart) * 1000 / freq.QuadPart;
     }
+    saveAccumulatorAsPGM(accumulator, max_rho, num_thetas, "accumulator1024_c.pgm");
+
 
     avgTC = timeTakenC/n;
     printf("Performing CUDA Hough Transform....\n");
