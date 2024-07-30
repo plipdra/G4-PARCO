@@ -13,14 +13,15 @@ __global__ void houghTransformKernel(unsigned char* d_image, int width, int heig
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        if (d_image[y * width + x] > 0) {
-            for (int theta = 0; theta < num_thetas; ++theta) {
+        if (d_image[y + x * height] > 0) {
+            for (int theta = -90; theta <= 89; ++theta) {
                 float theta_rad = (theta * PI) / 180.0;
                 int rho = (int)(x * cos(theta_rad) + y * sin(theta_rad));
+                int theta_index = theta - -90;
                 int rho_index = rho + max_rho;  // Shift rho index to positive
 
                 if (rho_index >= 0 && rho_index < 2 * max_rho + 1) {
-                    atomicAdd(&d_accumulator[theta * (2 * max_rho + 1) + rho_index], 1);
+                    atomicAdd(&d_accumulator[theta_index * (2 * max_rho + 1) + rho_index], 1);
                 }
             }
         }
@@ -131,6 +132,7 @@ int main() {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
+    FILE* file = fopen("C:\\Users\\Sofia\\Pictures\\disonaur-crimeoutline.png", "rb");
 
     int* accumulator;
     int max_rho;
@@ -144,7 +146,7 @@ int main() {
     printf("Performing C Hough Transform....\n");
     for(int i = 0; i<n; i++){
         QueryPerformanceCounter(&start);
-        houghTransform(image, width, height, &accumulator, &max_rho, &num_thetas);
+        houghTransform(image, 532, 634, &accumulator, &max_rho, &num_thetas);
         QueryPerformanceCounter(&end);
         timeTakenC += (double)(end.QuadPart - start.QuadPart) * 1000 / freq.QuadPart;
     }

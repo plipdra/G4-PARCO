@@ -1,6 +1,9 @@
 #include "mex.h"
 #include <cuda_runtime.h>
 #include <cmath>
+#include <stdint.h>
+#include <windows.h>
+#include <stdlib.h>
 
 #define PI 3.14159265
 #define MAX_THETA 180
@@ -64,6 +67,11 @@ void houghTransformCUDA(unsigned char* image, int width, int height, int** accum
 
 // MEX gateway function
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
+
+    _LARGE_INTEGER freq,start, end;
+    double timeTaken, timeTakenC, avgT, avgTC;
+    int n = 50;
+
     if (nrhs != 3) {
         mexErrMsgIdAndTxt("HoughTransform:invalidNumInputs", "Three inputs required.");
     }
@@ -78,7 +86,17 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
     int* accumulator;
     int max_rho, num_thetas;
 
-    houghTransformCUDA(image, width, height, &accumulator, &max_rho, &num_thetas);
+    printf("Performing CUDA Hough Transform....\n");
+    for(int i = 0; i< n; i++){
+        QueryPerformanceCounter(&start);
+        houghTransformCUDA(image, width, height, &accumulator, &max_rho, &num_thetas);
+        QueryPerformanceCounter(&end);
+        timeTaken += (double)(end.QuadPart - start.QuadPart) * 1000 / freq.QuadPart;
+    }
+
+    avgT = timeTaken/n;
+    printf("Done!\nAverage Time Taken to perform Hough Transform with CUDA after %d runs: %fms\n", n,avgT);
+
 
     mwSize dims[2] = { (mwSize)num_thetas, (mwSize)(2 * max_rho + 1) };
     plhs[0] = mxCreateNumericArray(2, dims, mxUINT8_CLASS, mxREAL);
