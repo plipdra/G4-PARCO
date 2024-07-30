@@ -90,25 +90,29 @@ void saveAccumulatorAsText(int* accumulator, int max_rho, int num_thetas, const 
 }
 
 void houghTransform(unsigned char* image, int width, int height, int** accumulator, int* max_rho, int* num_thetas) {
-    int x, y, theta;
+    int x, y, theta, theta_max, theta_min;
     int rho;
-    float theta_rad;
+    double theta_rad;
+
+    theta_min = -90;
+    theta_max = 89;
 
     *max_rho = (int)(sqrt(width * width + height * height));
-    *num_thetas = MAX_THETA;
+    *num_thetas = theta_max - theta_min + 1;
 
     *accumulator = (int*)calloc((*num_thetas) * (2 * (*max_rho) + 1), sizeof(int));
 
     for (y = 0; y < height; ++y) {
         for (x = 0; x < width; ++x) {
-            if (image[y * width + x] > 0) {
-                for (theta = 0; theta < *num_thetas; ++theta) {
+            if (image[y + x * height] > 0) {  // Correct index for column-major order
+                for (theta = theta_min; theta <= theta_max; ++theta) {
                     theta_rad = (theta * PI) / 180.0;
                     rho = (int)(x * cos(theta_rad) + y * sin(theta_rad));
+                    int theta_index = theta - theta_min;
                     int rho_index = rho + *max_rho;  // Shift rho index to positive
 
                     if (rho_index >= 0 && rho_index < 2 * (*max_rho) + 1) {
-                        (*accumulator)[theta * (2 * (*max_rho) + 1) + rho_index]++;
+                        (*accumulator)[theta_index * (2 * (*max_rho) + 1) + rho_index]++;
                     }
                 }
             }

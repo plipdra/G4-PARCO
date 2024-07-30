@@ -108,7 +108,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
             max_value = accumulator[i];
         }
     }
-    printf("highest: %d \n", max_value);
 
     for (int theta = 0; theta < num_thetas; ++theta) {
         for (int rho = 0; rho < 2 * max_rho + 1; ++rho) {
