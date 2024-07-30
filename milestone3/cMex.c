@@ -1,6 +1,9 @@
 #include "mex.h"
 #include <math.h>
+#include <stdint.h>
+#include <windows.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define PI 3.14159265
 #define MAX_THETA 180
@@ -99,9 +102,23 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
     int* accumulator;
     int max_rho, num_thetas;
 
-    houghTransform(image, width, height, &accumulator, &max_rho, &num_thetas);
+    LARGE_INTEGER freq, start, end;
+    double timeTakenC, avgTC;
+    int n = 50;
+    timeTakenC = 0;
+    QueryPerformanceFrequency(&freq);
+    printf("Performing C Hough Transform....\n");
+    for(int i = 0; i<n; i++){
+        QueryPerformanceCounter(&start);
+        houghTransform(image, width, height, &accumulator, &max_rho, &num_thetas);
+        QueryPerformanceCounter(&end);
+        timeTakenC += (double)(end.QuadPart - start.QuadPart) * 1000 / freq.QuadPart;
+    }
+    avgTC = timeTakenC/n;
     saveAccumulatorAsPGM(accumulator, max_rho, num_thetas, "accumulator1024C.pgm");
     saveAccumulatorAsText(accumulator, max_rho, num_thetas, "accumulator.txt");
+
+printf("Done!\n\nAverage Time Taken to perform Hough Transform with C after %d runs: %fms\n\n", n,avgTC);
 
     mwSize dims[2] = { (mwSize)num_thetas, (mwSize)(2 * max_rho + 1) };
     plhs[0] = mxCreateNumericArray(2, dims, mxUINT8_CLASS, mxREAL);

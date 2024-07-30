@@ -132,8 +132,7 @@ int main() {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
-    FILE* file = fopen("C:\\Users\\Sofia\\Pictures\\disonaur-crimeoutline.png", "rb");
-
+    
     int* accumulator;
     int max_rho;
     int num_thetas;
